@@ -709,19 +709,29 @@ function showPaymentGate() {
 }
 
 async function handlePayment() {
-  // REPLACE WITH YOUR ACTUAL STRIPE PUBLISHABLE KEY
-  const STRIPE_KEY = 'pk_live_YOUR_STRIPE_PUBLISHABLE_KEY';
-  
-  // For demo purposes, show loading then result
-  // In production: create a Stripe checkout session via your backend
-  document.querySelector('.pay-btn').textContent = 'Processing...';
+  document.querySelector('.pay-btn').textContent = 'Loading secure checkout...';
   document.querySelector('.pay-btn').disabled = true;
-  
-  // Simulate payment success for demo
-  // In production, integrate with Stripe Checkout
-  setTimeout(() => {
-    generateResult();
-  }, 1500);
+
+  try {
+    const response = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quizType, answers })
+    });
+
+    const data = await response.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Payment failed');
+    }
+  } catch (err) {
+    console.error(err);
+    document.querySelector('.pay-btn').textContent = '🔓 Unlock Full Report — €4.99';
+    document.querySelector('.pay-btn').disabled = false;
+    alert('Payment error. Please try again.');
+  }
 }
 
 async function generateResult() {
@@ -801,6 +811,25 @@ function shareResult(typeName) {
 // Close modal on overlay click
 document.getElementById('quizModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
+});
+
+// Handle return from Stripe payment
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === 'true') {
+    const quiz = params.get('quiz');
+    const answersRaw = params.get('answers');
+    if (quiz && answersRaw) {
+      try {
+        quizType = quiz;
+        currentQuiz = QUIZZES[quiz];
+        answers = JSON.parse(decodeURIComponent(answersRaw));
+        document.getElementById('quizModal').classList.add('active');
+        generateResult();
+        window.history.replaceState({}, '', '/');
+      } catch(e) { console.error(e); }
+    }
+  }
 });
 </script>
 </body>
