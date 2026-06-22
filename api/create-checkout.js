@@ -14,8 +14,9 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Stripe secret key not configured' });
     }
 
-    const successUrl = `https://www.ownprism.com?success=true&quiz=${quizType}&answers=${encodeURIComponent(JSON.stringify(answers))}`;
-    const cancelUrl = `https://www.ownprism.com?cancelled=true`;
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'https://www.ownprism.com';
+    const successUrl = `${origin}?success=true&quiz=${quizType}&answers=${encodeURIComponent(JSON.stringify(answers))}`;
+    const cancelUrl = `${origin}?cancelled=true`;
 
     const params = new URLSearchParams();
     params.append('payment_method_types[0]', 'card');
