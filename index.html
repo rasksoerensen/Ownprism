@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OwnPrism — Discover Your True Self</title>
+  <meta name="description" content="Take a personality quiz and get a deep AI-powered analysis of who you really are. Discover your communication style, attachment type, and social energy." />
+  <meta property="og:title" content="OwnPrism — Discover Your True Self" />
+  <meta property="og:description" content="AI-powered personality quizzes that go deeper than any test you've taken before." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --void: #0e0c14;
+      --deep: #16121f;
+      --surface: #1e1828;
+      --edge: #2e2540;
+      --violet: #7c3aed;
+      --violet-light: #a78bfa;
+      --coral: #f97066;
+      --mint: #34d399;
+      --text: #f0ebff;
+      --muted: #9985c0;
+      --radius: 16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--void);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(14,12,20,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--edge);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      background: linear-gradient(135deg, var(--violet-light), var(--coral));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-cta {
+      background: var(--violet);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+    .nav-cta:hover { background: #6d28d9; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-orbs {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-1 { width: 400px; height: 400px; background: var(--violet); top: -100px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 300px; height: 300px; background: var(--coral); bottom: -50px; right: -50px; animation-delay: -3s; }
+    .orb-3 { width: 250px; height: 250px; background: var(--mint); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: -6s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+    .orb-3 { animation-name: float3; }
+    @keyframes float3 {
+      0%, 100% { transform: translate(-50%,-50%) scale(1); }
+      50% { transform: translate(-50%,-55%) scale(1.05); }
+    }
+
+    .hero-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--violet-light);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      line-height: 1.05;
+      max-width: 800px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--violet-light), var(--coral));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 500px;
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    .hero-btn {
+      background: linear-gradient(135deg, var(--violet), #9333ea);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 0 40px rgba(124,58,237,0.4);
+    }
+    .hero-btn:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(124,58,237,0.6); }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 60px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+
+    /* QUIZZES SECTION */
+    .section {
+      padding: 80px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--violet-light);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      max-width: 500px;
+      margin-bottom: 48px;
+    }
+
+    /* QUIZ CARDS */
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .quiz-card {
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: var(--radius);
+      padding: 32px;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .quiz-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gradient);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .quiz-card:hover { transform: translateY(-4px); border-color: var(--violet); box-shadow: 0 12px 40px rgba(124,58,237,0.2); }
+    .quiz-card:hover::before { opacity: 1; }
+
+    .quiz-card[data-color="violet"] { --gradient: linear-gradient(90deg, var(--violet), var(--violet-light)); }
+    .quiz-card[data-color="coral"] { --gradient: linear-gradient(90deg, var(--coral), #fb923c); }
+    .quiz-card[data-color="mint"] { --gradient: linear-gradient(90deg, var(--mint), #6ee7b7); }
+    .quiz-card[data-color="pink"] { --gradient: linear-gradient(90deg, #ec4899, #f97316); }
+
+    .quiz-emoji { font-size: 2.2rem; margin-bottom: 16px; }
+    .quiz-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .quiz-desc { font-size: 0.9rem; color: var(--muted); margin-bottom: 20px; }
+    .quiz-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .quiz-time { font-size: 0.8rem; color: var(--muted); }
+    .quiz-price {
+      background: var(--edge);
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--violet-light);
+    }
+
+    /* HOW IT WORKS */
+    .how-section {
+      background: var(--deep);
+      padding: 80px 24px;
+    }
+    .how-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      margin-top: 48px;
+    }
+    .step { text-align: center; padding: 24px; }
+    .step-icon {
+      width: 56px; height: 56px;
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin: 0 auto 16px;
+    }
+    .step-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .step-desc { font-size: 0.9rem; color: var(--muted); }
+
+    /* MODAL OVERLAY */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(14,12,20,0.92);
+      z-index: 200;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .modal-overlay.active { display: flex; align-items: flex-start; justify-content: center; }
+
+    .modal {
+      background: var(--deep);
+      border: 1px solid var(--edge);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      margin: auto;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: var(--surface);
+      border: none;
+      color: var(--muted);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .modal-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+
+    .progress-bar {
+      background: var(--surface);
+      height: 4px;
+      border-radius: 2px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--violet), var(--coral));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .question-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+
+    .option-btn {
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      color: var(--text);
+      padding: 14px 18px;
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .option-btn:hover { border-color: var(--violet); background: var(--edge); }
+    .option-btn.selected { border-color: var(--violet); background: rgba(124,58,237,0.15); }
+
+    /* PAYMENT GATE */
+    .payment-gate {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .payment-gate h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .payment-gate p { color: var(--muted); margin-bottom: 24px; font-size: 0.9rem; }
+
+    .preview-blur {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-blur::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 20%, var(--deep) 80%);
+    }
+    .preview-text { color: var(--muted); font-size: 0.9rem; line-height: 1.7; filter: blur(3px); }
+
+    .pay-btn {
+      background: linear-gradient(135deg, var(--violet), #9333ea);
+      color: white;
+      border: none;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 30px rgba(124,58,237,0.4);
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .pay-btn:hover { transform: translateY(-2px); }
+
+    .secure-note { font-size: 0.78rem; color: var(--muted); }
+
+    /* RESULT */
+    .result-section { padding: 10px 0; }
+    .result-type {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, var(--violet-light), var(--coral));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .result-content {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 30px 0;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      background: var(--violet-light);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+
+    .share-btn {
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 16px;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .share-btn:hover { border-color: var(--violet); }
+
+    /* FOOTER */
+    footer {
+      background: var(--deep);
+      border-top: 1px solid var(--edge);
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 16px; }
+      .modal { padding: 24px; }
+      .hero-stats { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">OwnPrism</div>
+  <a href="#quizzes" class="nav-cta">Take a Quiz</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="hero-eyebrow">AI-Powered Self Discovery</div>
+  <h1>See yourself through a <span>different light</span></h1>
+  <p class="hero-sub">Deep personality quizzes that go beyond the surface. Understand how you think, love, and show up for others.</p>
+  <a href="#quizzes" class="hero-btn">Find Your Type →</a>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Personality Quizzes</div></div>
+    <div class="stat"><div class="stat-num">AI</div><div class="stat-label">Powered Results</div></div>
+    <div class="stat"><div class="stat-num">3 min</div><div class="stat-label">Average Time</div></div>
+  </div>
+</section>
+
+<!-- QUIZZES -->
+<section class="section" id="quizzes">
+  <div class="section-label">Choose Your Quiz</div>
+  <h2 class="section-title">What do you want to understand?</h2>
+  <p class="section-sub">Each quiz gives you a free glimpse — unlock the full AI deep-dive for €4.99</p>
+  <div class="quiz-grid">
+    <div class="quiz-card" data-color="violet" data-quiz="communication" onclick="startQuiz('communication')">
+      <div class="quiz-emoji">🗣️</div>
+      <div class="quiz-title">How You Really Communicate</div>
+      <div class="quiz-desc">Discover how others actually experience you in conversations — and why it sometimes goes wrong.</div>
+      <div class="quiz-meta"><span class="quiz-time">⏱ 3 min</span><span class="quiz-price">€4.99 full report</span></div>
+    </div>
+    <div class="quiz-card" data-color="coral" data-quiz="attachment" onclick="startQuiz('attachment')">
+      <div class="quiz-emoji">💞</div>
+      <div class="quiz-title">Your Attachment Style</div>
+      <div class="quiz-desc">Find out how you connect in relationships — and why you react the way you do when things get close.</div>
+      <div class="quiz-meta"><span class="quiz-time">⏱ 3 min</span><span class="quiz-price">€4.99 full report</span></div>
+    </div>
+    <div class="quiz-card" data-color="mint" data-quiz="conflict" onclick="startQuiz('conflict')">
+      <div class="quiz-emoji">⚡</div>
+      <div class="quiz-title">How You Handle Conflict</div>
+      <div class="quiz-desc">Understand your default response under pressure — and what it says about your emotional wiring.</div>
+      <div class="quiz-meta"><span class="quiz-time">⏱ 3 min</span><span class="quiz-price">€4.99 full report</span></div>
+    </div>
+    <div class="quiz-card" data-color="pink" data-quiz="social" onclick="startQuiz('social')">
+      <div class="quiz-emoji">🌊</div>
+      <div class="quiz-title">Your Social Energy Type</div>
+      <div class="quiz-desc">How do you show up in a room? What do people feel when they're around you — and what drains you?</div>
+      <div class="quiz-meta"><span class="quiz-time">⏱ 3 min</span><span class="quiz-price">€4.99 full report</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-inner">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Simple. Personal. Deep.</h2>
+    <div class="steps">
+      <div class="step"><div class="step-icon">🎯</div><div class="step-title">Pick a quiz</div><div class="step-desc">Choose the area of yourself you want to understand better.</div></div>
+      <div class="step"><div class="step-icon">💭</div><div class="step-title">Answer honestly</div><div class="step-desc">10 questions. No right or wrong. Just your real reactions.</div></div>
+      <div class="step"><div class="step-icon">🔮</div><div class="step-title">Get your result</div><div class="step-desc">AI builds a deep personal profile based on your specific answers.</div></div>
+      <div class="step"><div class="step-icon">✨</div><div class="step-title">Understand yourself</div><div class="step-desc">Walk away knowing something real about how you work.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div style="margin-bottom:12px;"><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="mailto:hello@ownprism.com">hello@ownprism.com</a></div>
+  <div>© 2025 OwnPrism. All rights reserved.</div>
+</footer>
+
+<!-- QUIZ MODAL -->
+<div class="modal-overlay" id="quizModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+const QUIZZES = {
+  communication: {
+    title: "How You Really Communicate",
+    emoji: "🗣️",
+    questions: [
+      { q: "When you disagree with someone, you usually...", options: ["Say it directly, even if it's uncomfortable", "Wait for the right moment to bring it up", "Drop hints and hope they get it", "Avoid the topic altogether"] },
+      { q: "Your friend seems upset but says 'I'm fine.' You...", options: ["Push a little — you sense something's off", "Respect their answer and give them space", "Change the subject to lighten the mood", "Tell them what you think is wrong"] },
+      { q: "In a group conversation, you tend to...", options: ["Steer the topic when it drifts", "Listen more than you speak", "Match whoever has the most energy", "Keep things light and funny"] },
+      { q: "When someone talks over you, you...", options: ["Reclaim the floor immediately", "Wait for a gap to re-enter", "Feel quietly frustrated but say nothing", "Lose your train of thought and drop it"] },
+      { q: "After a hard conversation, you feel most relieved when...", options: ["Everything was said clearly", "The relationship still feels okay", "You didn't hurt anyone", "It's just over"] },
+    ]
+  },
+  attachment: {
+    title: "Your Attachment Style",
+    emoji: "💞",
+    questions: [
+      { q: "When someone you care about pulls away, your first instinct is...", options: ["Reach out and check in", "Give them space and wait", "Worry they're losing interest", "Feel relieved — you needed space too"] },
+      { q: "How comfortable are you depending on people?", options: ["Very — I lean into close connections", "Somewhat — depends on the person", "Not really — I prefer to handle things myself", "It makes me anxious either way"] },
+      { q: "When a relationship starts getting serious, you...", options: ["Feel excited and dive in", "Move carefully, one step at a time", "Start to feel trapped or unsure", "Overthink everything they do"] },
+      { q: "Your partner hasn't replied in a few hours. You...", options: ["Assume they're busy and move on", "Wonder briefly, then forget it", "Check your last message to see if something's off", "Feel anxious and check again in 20 minutes"] },
+      { q: "What does 'closeness' feel like to you?", options: ["Comfortable and natural", "Nice but I need my space too", "Sometimes overwhelming", "I crave it but it also scares me"] },
+    ]
+  },
+  conflict: {
+    title: "How You Handle Conflict",
+    emoji: "⚡",
+    questions: [
+      { q: "Someone wrongs you. Your first move is...", options: ["Address it immediately", "Think it through before saying anything", "Vent to someone else first", "Hope it resolves itself"] },
+      { q: "In an argument, your weakness is...", options: ["Getting too direct too fast", "Shutting down emotionally", "Saying things you don't mean", "Giving in before you should"] },
+      { q: "After a fight, you tend to...", options: ["Want to resolve it right away", "Need space before talking again", "Replay it for days", "Move on quickly and pretend it didn't happen"] },
+      { q: "When someone raises their voice at you, you...", options: ["Match their energy", "Stay calm and controlled", "Freeze up", "Immediately try to de-escalate"] },
+      { q: "Your conflict style is best described as...", options: ["Head-on — deal with it now", "Strategic — pick your battles", "Avoidant — conflict feels dangerous", "Peacekeeper — harmony first"] },
+    ]
+  },
+  social: {
+    title: "Your Social Energy Type",
+    emoji: "🌊",
+    questions: [
+      { q: "After a big social event, you feel...", options: ["Energised and ready for more", "Fine but need a quiet evening", "Drained and need real alone time", "Mixed — depends on the people"] },
+      { q: "In a room full of strangers, you...", options: ["Start introducing yourself", "Find one person and go deep", "Wait to be approached", "Observe and join only when it feels right"] },
+      { q: "People who just met you usually think you're...", options: ["Outgoing and fun", "Calm and thoughtful", "Hard to read at first", "Warm but private"] },
+      { q: "You feel most like yourself when...", options: ["Surrounded by people and conversation", "One-on-one with someone you trust", "Alone with your own thoughts", "Doing something creative or meaningful"] },
+      { q: "What exhausts you most socially?", options: ["Small talk with no depth", "Too much alone time", "Conflict or tension in the group", "Being 'on' for too long"] },
+    ]
+  }
+};
+
+let currentQuiz = null;
+let currentQuestion = 0;
+let answers = [];
+let quizType = null;
+
+function startQuiz(type) {
+  quizType = type;
+  currentQuiz = QUIZZES[type];
+  currentQuestion = 0;
+  answers = [];
+  document.getElementById('quizModal').classList.add('active');
+  renderQuestion();
+}
+
+function closeModal() {
+  document.getElementById('quizModal').classList.remove('active');
+}
+
+function renderQuestion() {
+  const q = currentQuiz.questions[currentQuestion];
+  const total = currentQuiz.questions.length;
+  const progress = ((currentQuestion) / total) * 100;
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">${currentQuiz.emoji} ${currentQuiz.title}</div>
+    <div class="modal-sub">Question ${currentQuestion + 1} of ${total}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    <div class="question-text">${q.q}</div>
+    <div class="options">
+      ${q.options.map((opt, i) => `<button class="option-btn" onclick="selectOption(${i})">${opt}</button>`).join('')}
+    </div>
+  `;
+}
+
+function selectOption(i) {
+  answers.push(i);
+  if (currentQuestion < currentQuiz.questions.length - 1) {
+    currentQuestion++;
+    renderQuestion();
+  } else {
+    showPaymentGate();
+  }
+}
+
+function showPaymentGate() {
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">✨ Your results are ready</div>
+    <div class="modal-sub">Here's a glimpse of what we found...</div>
+    <div class="preview-blur">
+      <div class="preview-text">
+        Based on your answers, you show a distinct pattern in how you approach ${quizType === 'communication' ? 'conversations and connection' : quizType === 'attachment' ? 'closeness and relationships' : quizType === 'conflict' ? 'tension and resolution' : 'social energy and presence'}. 
+        Your responses reveal a nuanced combination of traits that most people never fully understand about themselves. 
+        The way you answered question 3 in particular points to something important about how you were shaped to respond under emotional pressure...
+      </div>
+    </div>
+    <div class="payment-gate">
+      <h3>Unlock your full reading</h3>
+      <p>Get your complete AI-generated personality deep-dive — what drives you, what holds you back, and how to use it.</p>
+      <button class="pay-btn" onclick="handlePayment()">🔓 Unlock Full Report — €4.99</button>
+      <div class="secure-note">🔒 Secure payment via Stripe · Instant access</div>
+    </div>
+  `;
+}
+
+async function handlePayment() {
+  const btn = document.querySelector('.pay-btn');
+  btn.textContent = 'Loading secure checkout...';
+  btn.disabled = true;
+
+  try {
+    const response = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quizType, answers })
+    });
+
+    let data = null;
+    let rawText = '';
+    try { data = await response.clone().json(); }
+    catch (_) { rawText = await response.text().catch(() => ''); }
+
+    if (response.ok && data && data.url) {
+      window.location.href = data.url;
+      return;
+    }
+    const serverMsg = (data && data.error) || (rawText && rawText.slice(0, 200)) || `Checkout failed (HTTP ${response.status})`;
+    throw new Error(serverMsg);
+  } catch (err) {
+    console.error('[handlePayment]', err);
+    btn.textContent = '🔓 Unlock Full Report — €4.99';
+    btn.disabled = false;
+    alert('Payment error: ' + (err.message || 'please try again.'));
+  }
+}
+
+async function generateResult() {
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-title">🔮 Building your profile...</div>
+    <div class="modal-sub">AI is analysing your answers</div>
+    <div class="loading-dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  `;
+
+  const answerDescriptions = answers.map((a, i) => {
+    return `Q${i+1}: "${currentQuiz.questions[i].q}" → "${currentQuiz.questions[i].options[a]}"`;
+  }).join('\n');
+
+  const prompt = `You are a deeply insightful personality analyst writing for someone aged 18-40 who wants to genuinely understand themselves.
+
+Based on these quiz answers about "${currentQuiz.title}", write a personal, warm, and deeply specific personality profile. 
+
+Answers:
+${answerDescriptions}
+
+Write 4 paragraphs:
+1. Their personality type name (create a specific, memorable name like "The Quiet Architect" or "The Charged Connector") and core trait summary
+2. How this shows up in their relationships and with others
+3. Their hidden strength that even they might not see
+4. One honest thing to work on — said with compassion
+
+Be specific, not generic. Write as if you genuinely know them. Avoid generic horoscope language. Make it feel earned.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content[0].text;
+    const lines = text.split('\n').filter(l => l.trim());
+    const typeName = lines[0].replace(/[*#]/g, '').trim();
+
+    document.getElementById('modalContent').innerHTML = `
+      <div class="result-section">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">Your Type</div>
+        <div class="result-type">${typeName}</div>
+        <div class="result-content">${text.split('\n').slice(1).join('<br><br>').replace(/[*#]/g, '')}</div>
+        <button class="share-btn" onclick="shareResult('${typeName.replace(/'/g, "\\'")}')">📤 Share your result</button>
+        <button class="share-btn" style="margin-top:8px;background:var(--violet);border-color:var(--violet);color:white;" onclick="closeModal()">Take another quiz →</button>
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('modalContent').innerHTML = `
+      <div class="result-section">
+        <div class="result-type">The Deep Feeler</div>
+        <div class="result-content">Your answers reveal someone who processes the world through connection and meaning. You notice things others miss — the slight shift in someone's tone, the unspoken tension in a room. This isn't sensitivity in the fragile sense; it's a kind of emotional intelligence that makes you invaluable to people when they need someone who truly gets it.<br><br>In relationships, you give generously — sometimes before you've checked whether the other person is ready to receive it. You lead with care, and this means you can end up over-extended, quietly wondering if anyone does the same for you.<br><br>Your hidden strength: you hold space for people in ways they remember for years. You may not always get credit for it, but the people you've shown up for haven't forgotten.<br><br>One honest thing: learn to ask for what you need before you need it urgently. The people who care about you can't always read between the lines the way you read theirs.</div>
+        <button class="share-btn" onclick="shareResult('The Deep Feeler')">📤 Share your result</button>
+        <button class="share-btn" style="margin-top:8px;background:var(--violet);border-color:var(--violet);color:white;" onclick="closeModal()">Take another quiz →</button>
+      </div>
+    `;
+  }
+}
+
+function shareResult(typeName) {
+  const text = `I just found out I'm "${typeName}" on OwnPrism 🔮 Take the quiz at ownprism.com`;
+  if (navigator.share) {
+    navigator.share({ title: 'My OwnPrism Result', text, url: 'https://ownprism.com' });
+  } else {
+    navigator.clipboard.writeText(text);
+    alert('Result copied to clipboard!');
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('quizModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Handle return from Stripe payment
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('success') === 'true') {
+    const quiz = params.get('quiz');
+    const answersRaw = params.get('answers');
+    if (quiz && answersRaw) {
+      try {
+        quizType = quiz;
+        currentQuiz = QUIZZES[quiz];
+        answers = JSON.parse(decodeURIComponent(answersRaw));
+        document.getElementById('quizModal').classList.add('active');
+        generateResult();
+        window.history.replaceState({}, '', '/');
+      } catch(e) { console.error(e); }
+    }
+  }
+});
+</script>
+</body>
+</html>
